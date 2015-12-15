@@ -18,4 +18,11 @@ R2:eth2:2.2.2.2/24:R3:eth2:2.2.2.1/24:R4:eth2:2.2.2.3/24
 
 run "perl setup.pl make [PATH_TO_CLONE]"
 
+Once setup is done do following,
 
+1. docker exec -ti R[x] bash.
+2. ./runme.sh.
+
+Note:
+x = any docker instance check using docker ps
+step 2 will build quagga and configure zebra, bgpd and ospfd.
