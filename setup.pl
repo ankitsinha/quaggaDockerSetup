@@ -39,60 +39,60 @@ if ($arg eq "clean")
 }
 elsif ($arg eq "make")
 {
-while (my $row = <$fh>) 
-{
-  chomp $row;
-  my @fields = split(/:/, $row);
-  if (($fields[0] eq "CLONE") and ($fields[1] eq "yes"))
+  while (my $row = <$fh>) 
   {
-     $doClone = 1;
-     if(-e $givenPath and -d $givenPath)
-     {
-        print "Cloning to $givenPath...\n";
-        $clonePath = $givenPath;
-        chdir $clonePath; 
-     }
-     else
-     {
-        print "Cloning to $clonePath...\n";
-        chdir $clonePath;
-     }
-     my $cmd = "git clone http://git.savannah.gnu.org/cgit/quagga.git";
-     system "$cmd";
-     sleep(5);
+    chomp $row;
+    my @fields = split(/:/, $row);
+    if (($fields[0] eq "CLONE") and ($fields[1] eq "yes"))
+    {
+       $doClone = 1;
+       if(-e $givenPath and -d $givenPath)
+       {
+          print "Cloning to $givenPath...\n";
+          $clonePath = $givenPath;
+          chdir $clonePath; 
+       }
+       else
+       {
+          print "Cloning to $clonePath...\n";
+          chdir $clonePath;
+       }
+       my $cmd = "git clone http://git.savannah.gnu.org/cgit/quagga.git";
+       system "$cmd";
+       sleep(5);
+    }
+    elsif (($fields[0] eq "DOCKERS") and ($fields[1] > 0))
+    {
+       $numDockers = $fields[1];
+    }
+    if (($numDockers > 0) and ($dockerCreated))
+    {
+       my $size = @fields;
+       print "Setting up bridge ...\n";
+       for($i = 0; $i < $size; $i=$i+3)
+       {
+          print "br$br : $fields[$i]:$fields[$i+1]:$fields[$i+2]\n";
+          my $cmd = "sudo ./pipework br$br -i $fields[$i+1] $fields[$i] $fields[$i+2]";
+          system "$cmd";
+       }
+       printf "\n";
+       $br++;
+    }
+    if (($numDockers > 0) and !$dockerCreated)
+    {
+       print "Pulling ankitsinha19/buildenv:latest docker image...\n";
+       my $cmd = "docker pull ankitsinha19/buildenv";
+       system "$cmd";
+  
+       print "Creating $numDockers docker containers...\n";
+       for(my $numDock = 1; $numDock <= $numDockers; $numDock++)
+       {
+          my $cmd = "docker run --privileged -v $clonePath/quagga/:$clonePath/quagga --name R$numDock ankitsinha19/buildenv /sbin/my_init";
+          system "$cmd &";
+          sleep(5);
+          print "Docker created R$numDock\n";
+       }
+       $dockerCreated = 1;
+    }
   }
-  elsif (($fields[0] eq "DOCKERS") and ($fields[1] > 0))
-  {
-     $numDockers = $fields[1];
-  }
-  if (($numDockers > 0) and ($dockerCreated))
-  {
-     my $size = @fields;
-     print "Setting up bridge ...\n";
-     for($i = 0; $i < $size; $i=$i+3)
-     {
-        print "br$br : $fields[$i]:$fields[$i+1]:$fields[$i+2]\n";
-        my $cmd = "sudo ./pipework br$br -i $fields[$i+1] $fields[$i] $fields[$i+2]";
-        system "$cmd";
-     }
-     printf "\n";
-     $br++;
-  }
-  if (($numDockers > 0) and !$dockerCreated)
-  {
-     print "Pulling ankitsinha19/buildenv:latest docker image...\n";
-     my $cmd = "docker pull ankitsinha19/buildenv";
-     system "$cmd";
-
-     print "Creating $numDockers docker containers...\n";
-     for(my $numDock = 1; $numDock <= $numDockers; $numDock++)
-     {
-        my $cmd = "docker run --privileged -v $clonePath/quagga/:$clonePath/quagga --name R$numDock ankitsinha19/buildenv /sbin/my_init";
-        system "$cmd &";
-        sleep(5);
-        print "Docker created R$numDock\n";
-     }
-     $dockerCreated = 1;
-  }
-}
 }
