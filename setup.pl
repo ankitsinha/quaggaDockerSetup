@@ -49,7 +49,8 @@ while (my $row = <$fh>)
      if(-e $givenPath and -d $givenPath)
      {
         print "Cloning to $givenPath...\n";
-        chdir $givenPath; 
+        $clonePath = $givenPath;
+        chdir $clonePath; 
      }
      else
      {
@@ -71,7 +72,7 @@ while (my $row = <$fh>)
      for($i = 0; $i < $size; $i=$i+3)
      {
         print "br$br : $fields[$i]:$fields[$i+1]:$fields[$i+2]\n";
-        my $cmd = "sudo pipework br$br -i $fields[$i+1] $fields[$i] $fields[$i+2]";
+        my $cmd = "sudo ./pipework br$br -i $fields[$i+1] $fields[$i] $fields[$i+2]";
         system "$cmd";
      }
      printf "\n";
@@ -86,7 +87,7 @@ while (my $row = <$fh>)
      print "Creating $numDockers docker containers...\n";
      for(my $numDock = 1; $numDock <= $numDockers; $numDock++)
      {
-        my $cmd = "docker run --privileged -v $clonePath/quagga/:/quagga --name R$numDock ankitsinha19/buildenv /sbin/my_init";
+        my $cmd = "docker run --privileged -v $clonePath/quagga/:$clonePath/quagga --name R$numDock ankitsinha19/buildenv /sbin/my_init";
         system "$cmd &";
         sleep(5);
         print "Docker created R$numDock\n";
